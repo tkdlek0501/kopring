@@ -3,6 +3,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
     id 'org.jetbrains.kotlin.jvm' version '1.6.21'
+    id 'org.jetbrains.kotlin.plugin.jpa' version '1.6.21'
 }
 
 group = 'com.group'
@@ -17,6 +18,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:1.6.21'
+    // 런타임때 프로그램의 구조(객체, 함수, 프로퍼티)를 분석해내는 기법 - 주입 안하면 코틀린에서 kotlin/reflect/full/KClasses 에러남
     runtimeOnly 'com.h2database:h2'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

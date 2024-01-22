@@ -73,8 +73,9 @@ class UserServiceTest @Autowired constructor( // 생성자에 @Autowired 를 공
     @DisplayName("유저 이름 수정이 정상 동작한다")
     fun updateUserNameTest() {
         // given
-        val savedUSer = userRepository.save(User("A", null))
-        val request = UserUpdateRequest(savedUSer.id, "B")
+        val savedUser = userRepository.save(User("A", null))
+        val request = UserUpdateRequest(savedUser.id!!, "B")
+        // !! 를 붙여 null 아님 단언
 
         // when
         userService.updateUserName(request)
