@@ -26,6 +26,8 @@ class BookServiceTest @Autowired constructor(
         private val userLoanHistoryRepository: UserLoanHistoryRepository,
 ){
 
+    // git commit test
+
     @AfterEach
     fun clean() {
         bookRepository.deleteAll()
