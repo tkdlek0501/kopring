@@ -18,11 +18,12 @@ class User(
         @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
         // cascade 설정시 java와 다르게 대괄호로 감싸야 한다. : [CascadeType.ALL]
         val userLoanHistories: MutableList<UserLoanHistory> = mutableListOf(),
+        // loanBook() 에서 수정(add)이 가능해야 하므로 MutableList 로 만들어줌
 
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long? = null,
-        ) {
+) {
 
     init {
         if(name.isBlank()) {
@@ -36,10 +37,11 @@ class User(
 
     fun loanBook(book: Book) {
         this.userLoanHistories.add(UserLoanHistory(this, book.name, false))
+        // cascade persist 에 의해 User insert 시 UserLoanHistory 같이 insert
     }
 
     fun returnBook(bookName: String) {
-        this.userLoanHistories.first() { history -> history.bookName == bookName }.doReturn()
+        this.userLoanHistories.first { history -> history.bookName == bookName }.doReturn()
         // 조건에 만족하는 첫번째 요소 찾아옴
     }
 }
