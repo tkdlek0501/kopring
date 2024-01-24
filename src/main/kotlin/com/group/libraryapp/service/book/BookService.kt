@@ -22,7 +22,7 @@ class BookService(
 
     @Transactional
     fun saveBook(request: BookRequest) {
-        val newBook = Book(request.name)
+        val newBook = Book(request.name, request.type)
         bookRepository.save(newBook)
     }
 
@@ -42,5 +42,15 @@ class BookService(
         val user = userRepository.findByName(request.userName) ?: fail()
         user.returnBook(request.bookName)
     }
+
+    // TODO: 첫 번째 요구사항 추가하기 - 책의 분야
+    // 요구사항
+    // 1. 책을 등록할 때에 '분야'를 선택해야 한다.
+    //      분야에는 5가지 분야가 있다. - 컴퓨터 / 경제 / 사회 / 언어 / 과학
+    // 목표
+    // 1. Type, Status 등을 서버에서 관리하는 방법들을 살펴보고 장단점을 이해한다.
+    // 2. Test Fixture의 필요성을 느끼고 구성하는 방법을 알아본다.
+    // 3. Kotlin에서 Enum + JPA + Spring Boot를 활용하는 방법을 알아본다.
+
 
 }
