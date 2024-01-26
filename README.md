@@ -960,3 +960,104 @@ class Book(
 Book.fixture("이상한 나라의 앨리스")
 ```
 </details>
+
+<details>
+  <summary><b>24.01.26 금 (22~24강)</b></summary>
+  <!-- 내용 -->
+  **Enum Class를 활용해 책의 분야 리팩토링 하기**
+
+기존에 Book 클래스에 type 필드를 String 타입으로 만들었는데, 이 때 생기는 문제점이 몇가지 있다.
+
+1. 요청을 검증하고 있지 않아 type으로 받을 값이 아니어도 들어온다. 검증을 추가할 수 있지만 번거롭다.
+2. 코드만 보았을 때, DB 테이블에 실제로 어떤 값이 들어가는지 알 수 없다. 
+3. type과 관련된 새로운 로직을 작성할 때 번거롭다.
+    1. 예를 들어, 책을 대출할 때마다 분야별로 ‘이벤트 점수’를 준다면? when 절을 이용해서 분기처리 해야된다..
+        
+        ```kotlin
+        fun getEventScore(): Int {
+        	return when (type) {
+        		"COMPUTER" -> 10
+        		"ECONOMY" -> 8
+        		"SOCIETY", "LANGUAGE", "SCIENCE" -> 5
+        		// 코드에 분기가 들어가고
+        		else -> throw IllegalArgumentException("잘못된 타입입니다")
+        		// 실행되지 않을 else문이 존재
+        	}	
+        }
+        
+        // 문자열 타이핑은 실수할 여지가 많고
+        // 새로운 type이 생기는 경우 로직 추가를 놓칠 수 있다.
+        ```
+        
+
+→ Enum Class를 만들어 해결
+
+```kotlin
+enum class BookType(val score: Int) {
+	COMPUTER(10),
+	ECONOMY(8),
+	SOCIETY(5),
+	LANGUAGE(5),
+	SCIENCE(5),
+}
+```
+
+```kotlin
+fun getEventScore(): Int {
+	return type.score
+}
+```
+
+but, 이렇게만 만들어 놓으면 DB에 숫자로 저장이 된다.
+
+이 때 생기는 문제점은
+
+1. 기존 Enum의 순서가 바뀌면 안된다.
+2. 기존 Enum을 삭제하고 새로운 Enum 타입을 추가하는 것이 제한적이다.
+
+→ DB에도 숫자가 아닌 문자열로 들어가게 하기 위해서 엔티티에서 해당 프로퍼티에 어노테이션을 달아줘야 한다.
+
+```kotlin
+@Enumerated(EnumType.STRING)
+val type: BookType,
+```
+
+**Boolean에도 Enum 활용하기**
+
+예를 들어 User 테이블에 유저의 휴면 여부를 파악하기 위해 유저의 활성 여부를 isActive 라는 Boolean 타입의 프로퍼티로 추가했다고 가정해보자. 이 때는 휴면 여부에 따라 yes or no 로 명확하므로 문제가 없지만, 다음과 같은 추가 요구 사항이 생겼다고 생각하자.
+
+‘유저의 탈퇴 여부를 soft 하게 관리해주세요 : 탈퇴는 휴면을 해제하여 로그인 한 후 이루어진다.’ 
+
+*soft : 실제 DB에는 데이터가 남아있지만, 시스템 상으로는 삭제된 것처럼 관리하는 방식
+
+그래서 isActive가 아닌 또 다른 프로퍼티인 isDeleted라는 Boolean 타입의 프로퍼티를 추가할 수 있다.
+
+이렇게 하나의 테이블에 서로 영향을 끼치는 Boolean이 2개가 되면 문제가 생긴다.
+
+1. Boolean이 2개가 있기 때문에 코드를 이해하기 어려워진다.
+    - 한 객체가 여러 상태를 표현할 수록 이해하기 어렵다.
+    - 현재 경우의 수는 2^2, 즉 4가지이다.
+    - 4가지도 충분히 어렵지만, 여기서 Boolean 이 더 늘어나면 경우의 수는 기하급수적으로 늘어난다.
+2. Boolean 2개로 표현되는 4가지 상태가 모두 유의미하지 않다.
+    - (isActive, isDeleted)는 총 4가지 경우가 있다.
+        - (false, false) - 휴면 상태인 유저
+        - (false, true) - 휴면이면서 탈퇴한 유저; 이런 상태는 불가능 하다.
+        - (true, false) - 휴면이 아닌 활성화된 유저이다.
+        - (true, true) - 탈퇴한 유저이다.
+    
+    → 실제로 불가능한 상태이지만 코드 상에서는 가능해서 유지 보수를 어렵게 만든다.
+    
+
+→ Enum을 써서 서로 관련된 Boolean 파라미터를 한 번에 관리하는 것으로 해결
+
+```kotlin
+enum class UserStatus {
+    ACTIVE,
+    IN_ACTIVE,
+    DELETED,
+}
+```
+
+1. 필드 1개로 여러 상태를 표현할 수 있기 때문에 코드의 이해가 쉬워진다.
+2. 정확하게 유의미한 상태만 나타낼 수 있기 때문에 코드의 유지보수가 용이해진다.
+</details>
