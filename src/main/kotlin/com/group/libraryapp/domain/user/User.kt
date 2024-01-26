@@ -2,18 +2,16 @@ package com.group.libraryapp.domain.user
 
 import com.group.libraryapp.domain.book.Book
 import com.group.libraryapp.domain.user.loanhistory.UserLoanHistory
-import javax.persistence.CascadeType
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
-import javax.persistence.OneToMany
+import javax.persistence.*
 
 @Entity
 class User(
         var name: String,
 
         val age: Int?,
+
+        @Enumerated(EnumType.STRING)
+        val status: UserStatus = UserStatus.ACTIVE,
 
         @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
         // cascade 설정시 java와 다르게 대괄호로 감싸야 한다. : [CascadeType.ALL]
@@ -36,7 +34,7 @@ class User(
     }
 
     fun loanBook(book: Book) {
-        this.userLoanHistories.add(UserLoanHistory(this, book.name, false))
+        this.userLoanHistories.add(UserLoanHistory(this, book.name))
         // cascade persist 에 의해 User insert 시 UserLoanHistory 같이 insert
     }
 

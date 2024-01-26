@@ -4,6 +4,7 @@ import com.group.libraryapp.domain.book.Book
 import com.group.libraryapp.domain.book.BookRepository
 import com.group.libraryapp.domain.user.UserRepository
 import com.group.libraryapp.domain.user.loanhistory.UserLoanHistoryRepository
+import com.group.libraryapp.domain.user.loanhistory.UserLoanStatus
 import com.group.libraryapp.dto.book.request.BookLoanRequest
 import com.group.libraryapp.dto.book.request.BookRequest
 import com.group.libraryapp.dto.book.request.BookReturnRequest
@@ -29,7 +30,7 @@ class BookService(
     @Transactional
     fun loanBook(request: BookLoanRequest) {
         val book = bookRepository.findByName(request.bookName) ?:  fail() // <- Kt : throw java.lang.IllegalArgumentException() <- Java : orElseThrow(::IllegalArgumentException)
-        if (userLoanHistoryRepository.findByBookNameAndIsReturn(request.bookName, false) != null) {
+        if (userLoanHistoryRepository.findByBookNameAndStatus(request.bookName, UserLoanStatus.LOANED) != null) {
             throw java.lang.IllegalArgumentException("진작 대출되어 있는 책입니다")
         }
 
@@ -43,7 +44,7 @@ class BookService(
         user.returnBook(request.bookName)
     }
 
-    // TODO: 첫 번째 요구사항 추가하기 - 책의 분야
+    // 첫 번째 요구사항 추가하기 - 책의 분야
     // 요구사항
     // 1. 책을 등록할 때에 '분야'를 선택해야 한다.
     //      분야에는 5가지 분야가 있다. - 컴퓨터 / 경제 / 사회 / 언어 / 과학

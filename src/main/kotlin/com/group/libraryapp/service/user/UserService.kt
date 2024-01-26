@@ -2,6 +2,7 @@ package com.group.libraryapp.service.user
 
 import com.group.libraryapp.domain.user.User
 import com.group.libraryapp.domain.user.UserRepository
+import com.group.libraryapp.domain.user.UserStatus
 import com.group.libraryapp.dto.user.request.UserCreateRequest
 import com.group.libraryapp.dto.user.request.UserUpdateRequest
 import com.group.libraryapp.dto.user.response.UserResponse
