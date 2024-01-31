@@ -3,6 +3,8 @@ package com.group.libraryapp.service.user
 import com.group.libraryapp.domain.user.User
 import com.group.libraryapp.domain.user.UserRepository
 import com.group.libraryapp.domain.user.UserStatus
+import com.group.libraryapp.domain.user.loanhistory.UserLoanHistory
+import com.group.libraryapp.domain.user.loanhistory.UserLoanStatus
 import com.group.libraryapp.dto.user.request.UserCreateRequest
 import com.group.libraryapp.dto.user.request.UserUpdateRequest
 import com.group.libraryapp.dto.user.response.BookHistoryResponse
@@ -48,13 +50,16 @@ class UserService(
 
     @Transactional(readOnly = true)
     fun getUserLoanHistories(): List<UserLoanHistoryResponse> {
-        userRepository.findAll().map { user ->
+        return userRepository.findAll().map { user ->
+            // 여럭 user는 한 번의 쿼리에서 가져오지만,
             UserLoanHistoryResponse(
                     name = user.name,
                     books = user.userLoanHistories.map { history ->
+                        // userLoanHistories 를 get 하는 순간
+                        // select * from user_loan_history where user_id = ? 쿼리가 user_id 의 개수만큼 발생한다 (N+1)
                         BookHistoryResponse(
                                 name = history.bookName,
-                                isReturn = history.sta
+                                isReturn = history.status == UserLoanStatus.RETURNED
                         )
                     }
             )
