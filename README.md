@@ -1107,3 +1107,106 @@ enum class UserStatus {
 
 → 두 개의 테스트 중 앞의 테스트가 실패하는 경우에는 뒤의 테스트는 아예 수행되지 않아 검증을 하지 못한다.
 </details>
+
+<details>
+  <summary><b>24.01.31 수 (28~31강)</b></summary>
+  <!-- 내용 -->
+**SQL JOIN 이란? - skip**
+
+**N+1 문제를 해결하기 위한 방법 - fetch join**
+
+1:N 관계에서 발생하는 N+1을 해결
+
+```kotlin
+// N+1 이 발생하는 코드
+return userRepository.findAll().map { user ->
+    // 여러 user는 한 번의 쿼리에서 가져오지만,
+    UserLoanHistoryResponse(
+            name = user.name,
+            books = user.userLoanHistories.map { history ->
+                // userLoanHistories 를 get 하는 순간
+                // select * from user_loan_history where user_id = ? 쿼리가 user_id 의 개수만큼 발생한다 (N+1)
+                BookHistoryResponse(
+                        name = history.bookName,
+                        isReturn = history.status == UserLoanStatus.RETURNED
+                )
+            }
+    )
+}
+```
+
+위 처럼 문제가 발생하는 코드를 수정하기 위해
+
+```kotlin
+return userRepository.findAllWithHistories().map(UserLoanHistoryResponse::of)
+```
+
+```kotlin
+@Query("SELECT DISTINCT u FROM User u " +
+            "LEFT JOIN FETCH u.userLoanHistories")
+fun findAllWithHistories(): List<User>
+```
+
+- user와 userLoanHistories 는 1:N 연관관계임을 생각
+- 대출기록(userLoanHistory)이 없는 user 도 다 가져올 것이니까 LEFT JOIN 사용
+- user 가 userLoanHistory 와 join 하면서 여러 row 를 가져오는 것을 방지하기 위해 DISTINCT 사용
+- N+1 쿼리를 없애기 위해 fetch join 사용
+
+그리고 리팩토링을 위해 다음과 같이 코드 수정
+
+```kotlin
+@Entity
+class UserLoanHistory(
+        @ManyToOne
+        val user: User,
+
+        val bookName: String,
+
+        var status: UserLoanStatus = UserLoanStatus.LOANED,
+
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        val id: Long? = null,
+) {
+
+    // 재활용하는 경우가 많은 변수의 경우 엔티티 내에서 관리하면 좋다.
+    val isReturn: Boolean
+        get() = this.status == UserLoanStatus.RETURNED
+...
+```
+
+- 값을 변환하여 자주 사용하는 변수의 경우 엔티티 내에서 프로퍼티로 만들어 관리
+
+```kotlin
+data class UserLoanHistoryResponse(
+        val name: String, // 유저 이름
+        val books: List<BookHistoryResponse>
+) {
+    companion object {
+        fun of(user: User): UserLoanHistoryResponse {
+            return UserLoanHistoryResponse(
+                name = user.name,
+                books = user.userLoanHistories.map(BookHistoryResponse::of)
+            )
+        }
+    }
+}
+
+data class BookHistoryResponse(
+        val name: String, // 책 이름
+        val isReturn: Boolean,
+) {
+    companion object { // 정적 팩토리 메서드를 관리하기 위해 동행객체 사용
+        fun of(history: UserLoanHistory): BookHistoryResponse {
+            return BookHistoryResponse(
+                    name = history.bookName,
+//                    isReturn = history.status == UserLoanStatus.RETURNED
+                    isReturn = history.isReturn
+            )
+        }
+    }
+}
+```
+
+- 정적 팩토리 메서드 (`of(entity: Entity)`) 를 만들어 entity → dto 로 변환하는 코드를 dto 에서 관리함으로써 서비스 계층 코드를 보다 심플하게 관리
+</details>
