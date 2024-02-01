@@ -50,19 +50,22 @@ class UserService(
 
     @Transactional(readOnly = true)
     fun getUserLoanHistories(): List<UserLoanHistoryResponse> {
-        return userRepository.findAll().map { user ->
-            // 여럭 user는 한 번의 쿼리에서 가져오지만,
-            UserLoanHistoryResponse(
-                    name = user.name,
-                    books = user.userLoanHistories.map { history ->
-                        // userLoanHistories 를 get 하는 순간
-                        // select * from user_loan_history where user_id = ? 쿼리가 user_id 의 개수만큼 발생한다 (N+1)
-                        BookHistoryResponse(
-                                name = history.bookName,
-                                isReturn = history.status == UserLoanStatus.RETURNED
-                        )
-                    }
-            )
-        }
+        return userRepository.findAllWithHistories().map(UserLoanHistoryResponse::of)
+        // response DTO 에 만든 정적 팩토리 메서드 (of()) 를 이용해서 entity 를 dto 로 변환하는 코드를 리팩토링 할 수 있다.(서비스 코드가 굉장히 심플해졌다.)
+// N+1 이 발생하는 코드
+//        return userRepository.findAll().map { user ->
+//            // 여러 user는 한 번의 쿼리에서 가져오지만,
+//            UserLoanHistoryResponse(
+//                    name = user.name,
+//                    books = user.userLoanHistories.map { history ->
+//                        // userLoanHistories 를 get 하는 순간
+//                        // select * from user_loan_history where user_id = ? 쿼리가 user_id 의 개수만큼 발생한다 (N+1)
+//                        BookHistoryResponse(
+//                                name = history.bookName,
+//                                isReturn = history.status == UserLoanStatus.RETURNED
+//                        )
+//                    }
+//            )
+//        }
     }
 }

@@ -21,6 +21,10 @@ class UserLoanHistory(
         val id: Long? = null,
 ) {
 
+    // 재활용하는 경우가 많은 변수의 경우 엔티티 내에서 관리하면 좋다.
+    val isReturn: Boolean
+        get() = this.status == UserLoanStatus.RETURNED
+
     fun doReturn(){
         this.status = UserLoanStatus.RETURNED
     }
