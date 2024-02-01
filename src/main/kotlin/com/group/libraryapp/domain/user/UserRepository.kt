@@ -1,10 +1,11 @@
 package com.group.libraryapp.domain.user
 
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 
 interface UserRepository : JpaRepository<User, Long> {
 
-    fun findByName(name: String): User? // java 에서 Optional<User>
+    fun findByName(name: String): User? // java 에서 Optional<User> 을 Kotlin 에서는 ? 로 null 허용할 수 있다.
 
     // N+1 해결을 위한 메서드 1
     // user와 userLoanHistories 는 1:N 연관관계임을 생각

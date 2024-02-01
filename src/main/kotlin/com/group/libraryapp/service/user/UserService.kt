@@ -38,13 +38,13 @@ class UserService(
 
     @Transactional
     fun updateUserName(request: UserUpdateRequest) {
-        val user = userRepository.findByIdOrThrow(request.id) ?: fail() // findByIdOrThrow : CrudRepository 의 확장 함수를 만듦 <- findByIdOrNull(id) : springframework 에서 코틀린을 위해 제공해주는 메서드
+        val user = userRepository.findByIdOrThrow(request.id) // findByIdOrThrow : exception 처리를 위해 CrudRepository 의 확장 함수를 만듦 <- findByIdOrNull(id) : springframework 에서 코틀린을 위해 제공해주는 메서드
         user.updateName(request.name)
     }
 
     @Transactional
     fun deleteUser(name: String) {
-        val user = userRepository.findByName(name) ?: fail() // orElseThrow(::IllegalArgumentException)
+        val user = userRepository.findByName(name) ?: fail() // orElseThrow(::IllegalArgumentException) : Java 에서 orElseThrow 로 보통 처리하는 것을 Kotlin 에서는 ?: 을 이용해서 처리할 수 있다
         userRepository.delete(user)
     }
 
