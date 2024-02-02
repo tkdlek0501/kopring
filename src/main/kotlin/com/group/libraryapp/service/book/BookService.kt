@@ -8,6 +8,7 @@ import com.group.libraryapp.domain.user.loanhistory.UserLoanStatus
 import com.group.libraryapp.dto.book.request.BookLoanRequest
 import com.group.libraryapp.dto.book.request.BookRequest
 import com.group.libraryapp.dto.book.request.BookReturnRequest
+import com.group.libraryapp.dto.book.response.BookStatResponse
 import com.group.libraryapp.util.fail
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -44,14 +45,43 @@ class BookService(
         user.returnBook(request.bookName)
     }
 
-    // 첫 번째 요구사항 추가하기 - 책의 분야
-    // 요구사항
-    // 1. 책을 등록할 때에 '분야'를 선택해야 한다.
-    //      분야에는 5가지 분야가 있다. - 컴퓨터 / 경제 / 사회 / 언어 / 과학
-    // 목표
-    // 1. Type, Status 등을 서버에서 관리하는 방법들을 살펴보고 장단점을 이해한다.
-    // 2. Test Fixture의 필요성을 느끼고 구성하는 방법을 알아본다.
-    // 3. Kotlin에서 Enum + JPA + Spring Boot를 활용하는 방법을 알아본다.
+    @Transactional(readOnly = true)
+    fun countLoanedBook(): Int {
+        return userLoanHistoryRepository.countByStatus(UserLoanStatus.LOANED).toInt()
+    }
+
+    @Transactional(readOnly = true)
+    fun getBookStatistics(): List<BookStatResponse> {
+        // ver 4 : 애플리케이션이 아니라 쿼리에서 group by를 사용해서 조회
+        return bookRepository.getStatus()
+
+        // ver 3 : 2차 리팩토링 ; type 별로 '묶을' 것이니까 groupBy 를 사용하는 게 좋다
+//        return bookRepository.findAll()
+//            .groupBy { book -> book.type }
+//            .map { (type, books) -> BookStatResponse(type, books.size.toLong()) }
+
+        // ver 1, 2 공통
+//        val results = mutableListOf<BookStatResponse>() // 가변 리스트를 사용해서 테스트 시 잘못 건드릴 수 있음
+//        val books = bookRepository.findAll()
+//        books.map { book -> results.firstOrNull { dto -> book.type == dto.type}?.plusOne()
+//            ?: results.add(BookStatResponse(book.type, 1))}
+
+        // ver 2 : 1차 리팩토링 ; 콜체인이 길어서 유지보수하기 어렵다는 문제 있음 또한 수정하기 어려워짐
+//        for (book in books) {
+//            results.firstOrNull { dto -> book.type == dto.type }?.plusOne() // ?. : null 이 아닌 경우 실행
+//                ?: results.add(BookStatResponse(book.type, 1)) // ?: : null 인 경우 실행
+
+        // ver 1 : 리팩토링 하기 전
+//            val targetDto = results.firstOrNull { dto -> book.type == dto.type  } // 이미 dto 로 만들어진 타입이 있는지
+//            if (targetDto == null) { // 없으면 results 에 해당 타입 최초로 넣어준다
+//                results.add(BookStatResponse(book.type, 1))
+//            } else { // 있으면 count 1 증가
+//                targetDto.plusOne()
+//            }
+//        }
+
+//        return results
+    }
 
 
 }
