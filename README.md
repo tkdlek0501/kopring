@@ -1109,7 +1109,7 @@ enum class UserStatus {
 </details>
 
 <details>
-  <summary><b>24.01.31 수 (28~31강)</b></summary>
+  <summary><b>24.02.01 목 (28~31강)</b></summary>
   <!-- 내용 -->
 **SQL JOIN 이란? - skip**
 
@@ -1209,4 +1209,81 @@ data class BookHistoryResponse(
 ```
 
 - 정적 팩토리 메서드 (`of(entity: Entity)`) 를 만들어 entity → dto 로 변환하는 코드를 dto 에서 관리함으로써 서비스 계층 코드를 보다 심플하게 관리
+</details>
+
+<details>
+  <summary><b>24.02.02 금 (32~36강)</b></summary>
+  <!-- 내용 -->
+**세 번째 요구사항 추가하기 - 책 통계**
+
+1. SQL의 다양한 기능들(sum, avg, count, group by, order by)을 이해한다.
+2. 간결한 함수형 프로그래밍 기법을 사용해보고 익숙해진다.
+3. 동일한 기능을 애플리케이션과 DB로 구현해보고, 차이점을 이해한다.
+
+```kotlin
+@Transactional(readOnly = true)
+    fun getBookStatistics(): List<BookStatResponse> {
+        // ver 4 : 애플리케이션이 아니라 쿼리에서 group by를 사용해서 조회
+        return bookRepository.getStatus()
+
+        // ver 3 : 2차 리팩토링 ; type 별로 '묶을' 것이니까 groupBy 를 사용하는 게 좋다
+//        return bookRepository.findAll()
+//            .groupBy { book -> book.type }
+//            .map { (type, books) -> BookStatResponse(type, books.size.toLong()) }
+
+        // ver 1, 2 공통
+//        val results = mutableListOf<BookStatResponse>() // 가변 리스트를 사용해서 테스트 시 잘못 건드릴 수 있음
+//        val books = bookRepository.findAll()
+//        books.map { book -> results.firstOrNull { dto -> book.type == dto.type}?.plusOne()
+//            ?: results.add(BookStatResponse(book.type, 1))}
+
+        // ver 2 : 1차 리팩토링 ; 콜체인이 길어서 유지보수하기 어렵다는 문제 있음 또한 수정하기 어려워짐
+//        for (book in books) {
+//            results.firstOrNull { dto -> book.type == dto.type }?.plusOne() // ?. : null 이 아닌 경우 실행
+//                ?: results.add(BookStatResponse(book.type, 1)) // ?: : null 인 경우 실행
+
+        // ver 1 : 리팩토링 하기 전
+//            val targetDto = results.firstOrNull { dto -> book.type == dto.type  } // 이미 dto 로 만들어진 타입이 있는지
+//            if (targetDto == null) { // 없으면 results 에 해당 타입 최초로 넣어준다
+//                results.add(BookStatResponse(book.type, 1))
+//            } else { // 있으면 count 1 증가
+//                targetDto.plusOne()
+//            }
+//        }
+
+//        return results
+    }
+```
+
+```kotlin
+@Query("SELECT NEW com.group.libraryapp.dto.book.response.BookStatResponse(b.type, COUNT(b.id)) " +
+            "FROM Book b " +
+            "GROUP BY b.type")
+fun getStatus(): List<BookStatResponse>
+```
+
+```kotlin
+@Test
+@DisplayName("분야별 책 권수를 정상 확인한다")
+fun getBookStatistics() {
+    // given
+    bookRepository.saveAll(listOf(
+        Book.fixture("A", BookType.COMPUTER),
+        Book.fixture("B", BookType.COMPUTER),
+        Book.fixture("C", BookType.SCIENCE),
+    ))
+
+    // when
+    val results = bookService.getBookStatistics()
+
+    // then
+    assertThat(results).hasSize(2)
+    assertCount(results, BookType.COMPUTER, 2)
+    assertCount(results, BookType.SCIENCE, 1)
+}
+
+private fun assertCount(results: List<BookStatResponse>, type: BookType, count: Int) {
+    assertThat(results.first { result -> result.type == type }.count).isEqualTo(count)
+}
+```
 </details>
