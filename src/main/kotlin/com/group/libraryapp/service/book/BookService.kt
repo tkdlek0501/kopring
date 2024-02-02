@@ -10,6 +10,7 @@ import com.group.libraryapp.dto.book.request.BookRequest
 import com.group.libraryapp.dto.book.request.BookReturnRequest
 import com.group.libraryapp.dto.book.response.BookStatResponse
 import com.group.libraryapp.util.fail
+import com.group.libraryapp.util.findByNameOrThrow
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -30,7 +31,10 @@ class BookService(
 
     @Transactional
     fun loanBook(request: BookLoanRequest) {
-        val book = bookRepository.findByName(request.bookName) ?:  fail() // <- Kt : throw java.lang.IllegalArgumentException() <- Java : orElseThrow(::IllegalArgumentException)
+        val book = bookRepository.findByName(request.bookName) ?: fail() // <- Kt : throw java.lang.IllegalArgumentException() <- Java : orElseThrow(::IllegalArgumentException)
+        // TODO: 아래처럼 확장함수 사용해도 되는지 확인해보기
+        // val book = bookRepository.findByNameOrThrow(request.bookName)
+
         if (userLoanHistoryRepository.findByBookNameAndStatus(request.bookName, UserLoanStatus.LOANED) != null) {
             throw java.lang.IllegalArgumentException("진작 대출되어 있는 책입니다")
         }
