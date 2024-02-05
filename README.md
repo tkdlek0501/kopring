@@ -1287,3 +1287,160 @@ private fun assertCount(results: List<BookStatResponse>, type: BookType, count: 
 }
 ```
 </details>
+
+<details>
+  <summary><b>24.02.05 월 (37~41강)</b></summary>
+  <!-- 내용 -->
+	**네 번째 요구사항 추가하기 - Querydsl**
+
+1. JPQL과 Querydsl 의 장단점을 이해할 수 있다.
+2. Querydsl을 Kotlin + Spring Boot와 함께 사용할 수 있다.
+3. Querydsl을 활용해 기존에 존재하던 Repository를 리팩토링 할 수 있다.
+
+**기술적인 요구사항**
+
+- 현재 사용하는 JPQL은 몇 가지 단점이 있다.
+    - 문자열이기 때문에 ‘버그’를 찾기가 어렵다.
+    - JPQL 문법이 일반 SQL과 조금 달라 복잡한 쿼리를 작성할 때 헷갈린다.(찾아봐야 한다.)
+    - 조건이 복잡한 동적쿼리를 작성할 때 함수가 계속해서 늘어난다.
+    - 프로덕션 코드 변경에 취약하다. (ex. 필드명 변경)
+- Querydsl을 적용해서 단점을 극복하자.
+    - Spring Data JPA 와 Querydsl을 함께 사용하며 서로를 보완해야 한다.
+
+ **querydsl 을 사용하기 위해 필요한 설정** 
+
+```
+plugins {
+	id 'org.jetbrains.kotlin.kapt' version '1.6.21' // querydsl 이용하기 위해
+}
+
+dependencies {
+	implementation 'com.querydsl:querydsl-jpa:5.0.0'
+  kapt("com.querydsl:querydsl-apt:5.0.0:jpa")
+  kapt("org.springframework.boot:spring-boot-configuration-processor")
+  // querydsl
+}
+```
+
+```kotlin
+package com.group.libraryapp.config
+
+import com.querydsl.jpa.impl.JPAQueryFactory
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import javax.persistence.EntityManager
+
+@Configuration
+class QuerydslConfig(
+    private val em: EntityManager
+) {
+
+    @Bean
+    fun querydsl(): JPAQueryFactory {
+        return JPAQueryFactory(em)
+    }
+
+}
+```
+
+**Querydsl 사용**
+
+공통
+
+```kotlin
+@Configuration
+class QuerydslConfig(
+    private val em: EntityManager
+) {
+
+    @Bean
+    fun querydsl(): JPAQueryFactory {
+        return JPAQueryFactory(em)
+    }
+
+}
+```
+
+방법 1. 
+
+```kotlin
+interface UserRepositoryCustom {
+
+    fun findAllWithHistories(): List<User>
+}
+```
+
+인터페이스를 만들어준다.
+
+```kotlin
+interface UserRepository : JpaRepository<User, Long>, **UserRepositoryCustom** {
+
+}
+```
+
+기존 UserRepostory를 UserRepositoryCustom을 상속 받게 해준다.
+
+```kotlin
+class UserRepositoryCustomImpl(
+    private val queryFactory: JPAQueryFactory
+) : UserRepositoryCustom{
+   
+    override fun findAllWithHistories(): List<User> {
+        return queryFactory.select(user).distinct()
+            .from(user)
+            .leftJoin(user.userLoanHistories, userLoanHistory)
+            .fetch()
+    }
+
+}
+```
+
+UserRepositoryCustom을 구현할 UserRepositoryCustomImpl 클래스를 만들어준다.
+
+QuerydslConfig에서 bean으로 등록한 JPAQueryFactory를 의존성 주입해준다.
+
+방법 2.
+
+```kotlin
+@Component
+class BookQuerydslRepository(
+    private val queryFactory: JPAQueryFactory
+) {
+
+    fun getStatus(): List<BookStatResponse> {
+        return queryFactory.select(Projections.constructor(BookStatResponse::class.java,
+            book.type,
+            book.id.count()
+        ))
+            .from(book)
+            .groupBy(book.type)
+            .fetch()
+    }
+
+}
+```
+
+queryDsl을 사용할 class를 만들어주고 bean으로 등록(@Component), QuerydslConfig에서 bean으로 등록한 JPAQueryFactory를 의존성 주입해준다.
+
+```kotlin
+@Service
+class BookService(
+
+	private val bookQuerydslRepository: BookQuerydslRepository,
+) {
+
+	@Transactional(readOnly = true)
+  fun getBookStatistics(): List<BookStatResponse> {
+      // ver 4 : 애플리케이션이 아니라 쿼리에서 group by를 사용해서 조회
+      return bookQuerydslRepository.getStatus()
+	}
+}
+```
+
+사용하는 곳에서 해당 repository를 의존성 주입받고 사용한다.
+
+> 지식공유자 말씀에는 두번째 방법을 더 선호한다고 하셨다. 특히 실무에서는 멀티 모듈을 많이 쓰는데, 모듈 별로 각각의 레포지토리가 존재하고 거기서 Querydsl 을 사용하는 식으로 구성을 하기 때문이라고 하셨다. core 모듈에서는 Spring Data JPA Repository 만 만들어 여러 모듈에서 공통으로 사용할 수 있게 하신다고 한다.
+> 
+
+JPQL 뿐만 아니라 Spring Data JPA로 쓰던 함수들도 확장 가능성(ex. 파라미터 추가)이 높다면 Querydsl로 만들어 두는 것이 좋다.
+</details>
