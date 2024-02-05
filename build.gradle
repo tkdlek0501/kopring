@@ -5,7 +5,8 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.6.21'
     id 'org.jetbrains.kotlin.plugin.jpa' version '1.6.21' // 코틀린 기본 생성자 생성 (@Entity, @Embeddable, @MappedSuperclass 붙이면 적용)
     id 'org.jetbrains.kotlin.plugin.spring' version '1.6.21' // 클래스를 open 으로 열어주기 위해 (@Transactioanl 등 사용시)
-    id "org.jetbrains.kotlin.plugin.allopen" version "1.6.21" // 코틀린은 기본적으로 클래스가 final 이므로 Proxy Lazy Fetching 을 위해 클래스가 상속 가능하게 open 으로 설정되게
+    id 'org.jetbrains.kotlin.plugin.allopen' version '1.6.21' // 코틀린은 기본적으로 클래스가 final 이므로 Proxy Lazy Fetching 을 위해 클래스가 상속 가능하게 open 으로 설정되게
+    id 'org.jetbrains.kotlin.kapt' version '1.6.21' // querydsl 이용하기 위해
 }
 
 group = 'com.group'
@@ -24,6 +25,13 @@ dependencies {
     // 런타임때 프로그램의 구조(객체, 함수, 프로퍼티)를 분석해내는 기법 - 주입 안하면 코틀린에서 kotlin/reflect/full/KClasses 에러남
     implementation 'com.fasterxml.jackson.module.jakson-module-kotlin:2.13.3'
     // 코틀린에서도 자바에서처럼 json을 객체로 mapping 할 수 있게 해주는 의존성 (없으면 parsing 에러)
+    implementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+    // junit
+    implementation 'com.querydsl:querydsl-jpa:5.0.0'
+    kapt("com.querydsl:querydsl-apt:5.0.0:jpa")
+    kapt("org.springframework.boot:spring-boot-configuration-processor")
+    // querydsl
+
     runtimeOnly 'com.h2database:h2'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

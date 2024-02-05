@@ -9,6 +9,8 @@ import com.group.libraryapp.dto.book.request.BookLoanRequest
 import com.group.libraryapp.dto.book.request.BookRequest
 import com.group.libraryapp.dto.book.request.BookReturnRequest
 import com.group.libraryapp.dto.book.response.BookStatResponse
+import com.group.libraryapp.repository.book.BookQuerydslRepository
+import com.group.libraryapp.repository.user.loanhistory.UserLoanHistoryQuerydslRepository
 import com.group.libraryapp.util.fail
 import com.group.libraryapp.util.findByNameOrThrow
 import org.springframework.stereotype.Service
@@ -20,7 +22,11 @@ class BookService(
 
         private val userRepository: UserRepository,
 
-        private val userLoanHistoryRepository: UserLoanHistoryRepository
+        private val userLoanHistoryRepository: UserLoanHistoryRepository,
+
+        private val bookQuerydslRepository: BookQuerydslRepository,
+
+        private val userLoanHistoryQuerydslRepository: UserLoanHistoryQuerydslRepository,
 ) {
 
     @Transactional
@@ -35,7 +41,7 @@ class BookService(
         // TODO: 아래처럼 확장함수 사용해도 되는지 확인해보기
          val book = bookRepository.findByNameOrThrow(request.bookName)
 
-        if (userLoanHistoryRepository.findByBookNameAndStatus(request.bookName, UserLoanStatus.LOANED) != null) {
+        if (userLoanHistoryQuerydslRepository.find(request.bookName, UserLoanStatus.LOANED) != null) {
             throw java.lang.IllegalArgumentException("진작 대출되어 있는 책입니다")
         }
 
@@ -53,13 +59,13 @@ class BookService(
 
     @Transactional(readOnly = true)
     fun countLoanedBook(): Int {
-        return userLoanHistoryRepository.countByStatus(UserLoanStatus.LOANED).toInt()
+        return userLoanHistoryQuerydslRepository.count(UserLoanStatus.LOANED).toInt()
     }
 
     @Transactional(readOnly = true)
     fun getBookStatistics(): List<BookStatResponse> {
         // ver 4 : 애플리케이션이 아니라 쿼리에서 group by를 사용해서 조회
-        return bookRepository.getStatus()
+        return bookQuerydslRepository.getStatus()
 
         // ver 3 : 2차 리팩토링 ; type 별로 '묶을' 것이니까 groupBy 를 사용하는 게 좋다
 //        return bookRepository.findAll()

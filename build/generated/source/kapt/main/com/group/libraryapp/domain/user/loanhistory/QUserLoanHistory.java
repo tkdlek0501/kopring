@@ -5,7 +5,9 @@ import static com.querydsl.core.types.PathMetadataFactory.*;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;
-import javax.annotation.processing.Generated;
+
+import javax.annotation.Generated;
+
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.dsl.PathInits;
 
@@ -26,7 +28,7 @@ public class QUserLoanHistory extends EntityPathBase<UserLoanHistory> {
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
-    public final EnumPath<com.group.libraryapp.domain.user.UserLoanStatus> status = createEnum("status", com.group.libraryapp.domain.user.UserLoanStatus.class);
+    public final EnumPath<UserLoanStatus> status = createEnum("status", UserLoanStatus.class);
 
     public final com.group.libraryapp.domain.user.QUser user;
 

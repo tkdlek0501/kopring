@@ -80,7 +80,7 @@ class UserServiceTest @Autowired constructor( // 생성자에 @Autowired 를 공
         // given
         val savedUser = userRepository.save(User("A", null))
         val request = UserUpdateRequest(savedUser.id!!, "B")
-        // !! 를 붙여 null 아님 단언
+        // !! 를 붙여 null 아님 단언; 저장된 이후에 id는 null 일 수 없다
 
         // when
         userService.updateUserName(request)
