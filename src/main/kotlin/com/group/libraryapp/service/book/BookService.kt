@@ -31,21 +31,23 @@ class BookService(
 
     @Transactional
     fun loanBook(request: BookLoanRequest) {
-        val book = bookRepository.findByName(request.bookName) ?: fail() // <- Kt : throw java.lang.IllegalArgumentException() <- Java : orElseThrow(::IllegalArgumentException)
+//        val book = bookRepository.findByName(request.bookName) ?: fail() // <- Kt : throw java.lang.IllegalArgumentException() <- Java : orElseThrow(::IllegalArgumentException)
         // TODO: 아래처럼 확장함수 사용해도 되는지 확인해보기
-        // val book = bookRepository.findByNameOrThrow(request.bookName)
+         val book = bookRepository.findByNameOrThrow(request.bookName)
 
         if (userLoanHistoryRepository.findByBookNameAndStatus(request.bookName, UserLoanStatus.LOANED) != null) {
             throw java.lang.IllegalArgumentException("진작 대출되어 있는 책입니다")
         }
 
-        val user = userRepository.findByName(request.userName) ?: fail()
+//        val user = userRepository.findByName(request.userName) ?: fail()
+        val user = userRepository.findByNameOrThrow(request.userName)
         user.loanBook(book)
     }
 
     @Transactional
     fun returnBook(request: BookReturnRequest) {
-        val user = userRepository.findByName(request.userName) ?: fail()
+//        val user = userRepository.findByName(request.userName) ?: fail()
+        val user = userRepository.findByNameOrThrow(request.userName)
         user.returnBook(request.bookName)
     }
 

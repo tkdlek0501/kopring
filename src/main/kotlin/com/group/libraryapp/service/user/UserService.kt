@@ -2,16 +2,12 @@ package com.group.libraryapp.service.user
 
 import com.group.libraryapp.domain.user.User
 import com.group.libraryapp.domain.user.UserRepository
-import com.group.libraryapp.domain.user.UserStatus
-import com.group.libraryapp.domain.user.loanhistory.UserLoanHistory
-import com.group.libraryapp.domain.user.loanhistory.UserLoanStatus
 import com.group.libraryapp.dto.user.request.UserCreateRequest
 import com.group.libraryapp.dto.user.request.UserUpdateRequest
-import com.group.libraryapp.dto.user.response.BookHistoryResponse
 import com.group.libraryapp.dto.user.response.UserLoanHistoryResponse
 import com.group.libraryapp.dto.user.response.UserResponse
-import com.group.libraryapp.util.fail
 import com.group.libraryapp.util.findByIdOrThrow
+import com.group.libraryapp.util.findByNameOrThrow
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -44,7 +40,8 @@ class UserService(
 
     @Transactional
     fun deleteUser(name: String) {
-        val user = userRepository.findByName(name) ?: fail() // orElseThrow(::IllegalArgumentException) : Java 에서 orElseThrow 로 보통 처리하는 것을 Kotlin 에서는 ?: 을 이용해서 처리할 수 있다
+//        val user = userRepository.findByName(name) ?: fail() // orElseThrow(::IllegalArgumentException) : Java 에서 orElseThrow 로 보통 처리하는 것을 Kotlin 에서는 ?: 을 이용해서 처리할 수 있다
+        val user= userRepository.findByNameOrThrow(name)
         userRepository.delete(user)
     }
 
