@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
 class UserServiceTest @Autowired constructor( // 생성자에 @Autowired 를 공통으로 붙인다
@@ -23,12 +24,13 @@ class UserServiceTest @Autowired constructor( // 생성자에 @Autowired 를 공
         private val userLoanHistoryRepository: UserLoanHistoryRepository,
 ) {
 
-    @AfterEach
-    fun clean() {
-        println("CLEAN 시작")
-        userRepository.deleteAll()
-    }
+//    @AfterEach
+//    fun clean() {
+//        println("CLEAN 시작")
+//        userRepository.deleteAll()
+//    }
 
+    @Transactional // 트랜잭션별로 테스트를 격리할 수 있고, 롤백도 해준다.(병렬 테스트가 가능하다.)
     @Test
     @DisplayName("유저 저장이 정상 동작한다")
     fun saveUserTest() {
@@ -54,6 +56,7 @@ class UserServiceTest @Autowired constructor( // 생성자에 @Autowired 를 공
         // => age getter에 @Nullable(jetbrains) 붙여주면 된다
     }
 
+    @Transactional
     @Test
     @DisplayName("유저 조회가 정상 동작한다")
     fun getUsersTest() {
@@ -74,6 +77,7 @@ class UserServiceTest @Autowired constructor( // 생성자에 @Autowired 를 공
         assertThat(results).extracting("age").containsExactlyInAnyOrder(20, null)
     }
 
+    @Transactional
     @Test
     @DisplayName("유저 이름 수정이 정상 동작한다")
     fun updateUserNameTest() {
@@ -90,6 +94,7 @@ class UserServiceTest @Autowired constructor( // 생성자에 @Autowired 를 공
         assertThat(result.name).isEqualTo("B")
     }
 
+    @Transactional
     @Test
     @DisplayName("유저 삭제가 정상 동작한다")
     fun deleteUserTest() {
@@ -103,6 +108,7 @@ class UserServiceTest @Autowired constructor( // 생성자에 @Autowired 를 공
         assertThat(userRepository.findAll()).isEmpty()
     }
 
+    @Transactional
     @Test
     @DisplayName("대출 기록이 없는 유저도 응답에 포함된다")
     fun getUserLoanHistoriesTest1() {
@@ -118,6 +124,7 @@ class UserServiceTest @Autowired constructor( // 생성자에 @Autowired 를 공
         assertThat(results[0].books).isEmpty()
     }
 
+    @Transactional
     @Test
     @DisplayName("대출 기록이 많은 유저의 응답이 정상 동작한다")
     fun getUserLoanHistoriesTest2() {
@@ -142,6 +149,7 @@ class UserServiceTest @Autowired constructor( // 생성자에 @Autowired 를 공
                 .containsExactlyInAnyOrder(false, false, true)
     }
 
+    @Transactional
     @Test
     @DisplayName("위 두 테스트가 합쳐진 테스트")
     fun getUserLoanHistoriesTest3() {
